@@ -1,6 +1,1 @@
-# Implementation of basic LCA in 2 programming languages, part of SWENG module (2021)
-
-Languages used:
-
-* Python - Previous experience
-* TypeScript - No previous experience
+# Implementation of basic LCA in python. See the other repo in the submission for TypeScript version
