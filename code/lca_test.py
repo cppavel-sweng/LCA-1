@@ -62,11 +62,48 @@ class LcaTest(unittest.TestCase):
 
         self.dag_example = DAG(
             [
-                [False, True,  True,  True,  True],
-                [False, False, False, True,  False],
-                [False, False, False, True,  True],
-                [False, False, False, False, True],
-                [False, False, False, False, False]
+            #      A     B       C     D      E
+                [False, True,  True,  True,  True],   # A 
+                [False, False, False, True,  False],  # B
+                [False, False, False, True,  True],   # C 
+                [False, False, False, False, True],   # D 
+                [False, False, False, False, False]   # E
+            ]
+        )
+
+        # DAG example from Baeldung
+        # https://www.baeldung.com/wp-content/uploads/sites/4/2021/01/Dag-3.jpg
+
+        self.dag_complex = DAG(
+            [
+            #      0      1     2      3      4       5      6      7      8
+                [False, True,  True, False, False,  False, False, False, False], # 0 
+                [False, False, False, False, True,  False, True,  False, False], # 1
+                [False, False, False, True,  True,  False, True,  False, False], # 2 
+                [False, False, False, False, False, False, True,  False, False], # 3 
+                [False, False, False, False, False, False, False, False, False], # 4
+                [False, False, False, False, False, False, False, False, False], # 5 
+                [False, False, False, False, False, True,  False, True,  False], # 6 
+                [False, False, False, False, False, False, False, False, True ], # 7 
+                [False, False, False, False, False, False, False, False, False]  # 8
+            ]
+        )
+
+        # DAG with multiple roots
+
+        self.dag_multiple_roots = DAG(
+            [
+                # 0       1      2      3      4     5      6      7       8      9
+                [False, False, False, False, False, False, False, True,  False, False ],  # 0
+                [False, False, False, True,  False, False, False, False, False, False ],  # 1 
+                [False, False, False, False, True,  False, False, True,  False, False ],  # 2 
+                [False, False, False, False, False, True,  False, False, False, False ],  # 3
+                [False, False, False, False, False, True,  True,  False, False, False ],  # 4
+                [False, False, False, False, False, False, False, False, True,  True  ],  # 5
+                [False, False, False, False, False, False, False, False, False, True  ],  # 6 
+                [False, False, False, False, False, False, True,  False, False, False ],  # 7
+                [False, False, False, False, False, False, False, False, False, False ],  # 8
+                [False, False, False, False, False, False, False, False, False, False ],  # 9
             ]
         )
 
@@ -144,19 +181,54 @@ class LcaTest(unittest.TestCase):
             self.only_root, node_1, node_2))
 
     @parameterized.expand([
-        ("arbitrary - 1", 3, 4, 2),                        # D, E -> C
-        ("arbitrary - 2", 3, 2, 0),                        # D, C -> A
-        ("arbitrary - 3", 1, 4, 0),                        # B, E -> A
-        ("arbitrary - 3, change order", 4, 1, 0),          # E, B -> A
-        ("root with other node", 0, 4, 0),                 # A, E -> A
-        ("node with itself", 2, 2, 2),                     # C, C -> C
+        ("dag-complex, arbitrary - 1", 4, [0, 1, 2]),
+        ("dag-complex, arbitrary - 2", 7, [0, 1, 2, 3, 6]),
     ])
-    def test_valid_lca_dag(self, name, node_1, node_2, expected):
-        self.assertEqual(expected, LCA.find_LCA_DAG(
+    def test_dfs_helper(self, name, dest, expected):
+        parents = []
+        LCA.dfs_helper(self.dag_complex, 0, dest, [], parents)
+        self.assertCountEqual(parents, expected)
+
+
+    @parameterized.expand([
+        ("multiple roots", [0, 1, 2]),
+    ])
+    def test_find_all_roots(self, name,  expected):
+        actual = LCA.find_all_roots(self.dag_multiple_roots)
+        self.assertCountEqual(actual, expected)
+
+    @parameterized.expand([
+        ("arbitrary - 1", 3, 4, [1, 2]),                     # D, E -> C, B
+        ("arbitrary - 2", 3, 2, [0]),                        # D, C -> A
+        ("arbitrary - 3", 1, 4, [0]),                        # B, E -> A
+        ("arbitrary - 3, change order", 4, 1, [0]),          # E, B -> A
+        ("root with other node - 1", 0, 4, [0]),             # A, E -> A
+        ("root with other node - 2", 4, 0, [0]),             # E, A -> A
+        ("node with itself", 2, 2, [0]),                     # C, C -> A
+    ])
+    def test_valid_lca_dag_wiki(self, name, node_1, node_2, expected):
+        self.assertCountEqual(expected, LCA.find_LCA_DAG(
             self.dag_example, node_1, node_2))
 
-    
+    @parameterized.expand([
+        ("arbitrary - 1", 4, 7, [1, 2]),                        # 4,7 -> 1, 2
+        ("arbitrary - 1 - change order", 7, 4, [1, 2]),         # 4,7 -> 1, 2
+        ("root with other node - 1", 0, 8, [0]),                # 0,8 -> 0
+        ("root with other node - 2", 8, 0, [0]),                # 8,0 -> 0          
+        ("node with itself", 2, 2, [0]),                        # 2,2 -> 0                 
+    ])
+    def test_valid_lca_dag_complex(self, name, node_1, node_2, expected):
+        self.assertCountEqual(expected, LCA.find_LCA_DAG(
+            self.dag_complex, node_1, node_2))
 
+    @parameterized.expand([
+        ("root with another root", 0, 2, []),                   # 0,2 -> NO LCA
+        ("simple - 1", 8, 9, [5]),                              # 8,9 -> 5
+        ("multiple lcas", 5, 8, [3, 4]),                        # 5,8 -> 3, 4            
+    ])
+    def test_valid_lca_dag_multiple_roots(self, name, node_1, node_2, expected):
+        self.assertCountEqual(expected, LCA.find_LCA_DAG(
+            self.dag_multiple_roots, node_1, node_2))
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
