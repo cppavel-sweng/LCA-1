@@ -64,7 +64,7 @@ class LCA:
         parents: typing.List[int]):
         """Finds all parents of a particular node in DAG.
 
-            Returns an array of all unique parents in parents parameter
+            Returns an array of all unique parents in parents parameter.
         """
         if current == dest:
             for node in path:
@@ -83,7 +83,7 @@ class LCA:
     def find_all_roots(graph: DAG) -> typing.List[int]:
         """Finds all roots (vertices with in_degree = 0).
 
-            Returns list of unique roots
+            Returns list of unique roots.
         """
         roots = []
         for j in range(0, len(graph.adjacency_matrix[0])):
