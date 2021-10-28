@@ -1,4 +1,4 @@
-from lca import LCA, Node
+from lca import LCA, Node, DAG
 from parameterized import parameterized, parameterized_class
 
 import logging
@@ -57,6 +57,19 @@ class LcaTest(unittest.TestCase):
 
         self.only_root = Node(1)
 
+        # DAG example for Wikipedia
+        # https://en.wikipedia.org/wiki/Directed_acyclic_graph#/media/File:Tred-G.svg
+
+        self.dag_example = DAG(
+            [
+                [False, True,  True,  True,  True],
+                [False, False, False, True,  False],
+                [False, False, False, True,  True],
+                [False, False, False, False, True],
+                [False, False, False, False, False]
+            ]
+        )
+
         # Set up logging
         logging.basicConfig(filename="lca_test.log",
                             encoding="utf-8", level=logging.INFO)
@@ -69,9 +82,9 @@ class LcaTest(unittest.TestCase):
         ("deepest right", 10, True, [1, 3, 7, 9, 10]),
         ("non-existent", 228, False, []),
     ])
-    def test_valid_find_path(self, name, node_id, expected, expected_path):
+    def test_valid_find_path_binary(self, name, node_id, expected, expected_path):
         actual_path = []
-        self.assertEqual(expected, LCA.find_path(
+        self.assertEqual(expected, LCA.find_path_binary(
             self.valid_tree, node_id, actual_path))
         logging.info(f"actual path in the tree is {actual_path} for test with name: {name} "
                      f"and destination node: {node_id}")
@@ -80,9 +93,9 @@ class LcaTest(unittest.TestCase):
     @parameterized.expand([
         ("non-existent", 2, False, []),
     ])
-    def test_empty_find_path(self, name, node_id, expected, expected_path):
+    def test_empty_find_path_binary(self, name, node_id, expected, expected_path):
         actual_path = []
-        self.assertEqual(expected, LCA.find_path(
+        self.assertEqual(expected, LCA.find_path_binary(
             self.empty_tree, node_id, actual_path))
         logging.info(f"actual path in the tree is {actual_path} for test with name: {name} "
                      f"and destination node: {node_id}")
@@ -92,9 +105,9 @@ class LcaTest(unittest.TestCase):
         ("non-existent", 2, False, []),
         ("root", 1, True, [1]),
     ])
-    def test_root_find_path(self, name, node_id, expected, expected_path):
+    def test_root_find_path_binary(self, name, node_id, expected, expected_path):
         actual_path = []
-        self.assertEqual(expected, LCA.find_path(
+        self.assertEqual(expected, LCA.find_path_binary(
             self.only_root, node_id, actual_path))
         logging.info(f"actual path in the tree is {actual_path} for test with name: {name} "
                      f"and destination node: {node_id}")
@@ -107,8 +120,8 @@ class LcaTest(unittest.TestCase):
         ("left and right child of the same node", 6, 7, 3),
         ("root with some other node", 1, 10, 1),
     ])
-    def test_valid_lca(self, name, node_1, node_2, expected):
-        self.assertEqual(expected, LCA.find_LCA(
+    def test_valid_lca_binary(self, name, node_1, node_2, expected):
+        self.assertEqual(expected, LCA.find_LCA_binary(
             self.valid_tree, node_1, node_2))
 
     @parameterized.expand([
@@ -116,8 +129,8 @@ class LcaTest(unittest.TestCase):
         ("root with itself", 1, 1, -1),
         ("same node", 7, 7, -1),
     ])
-    def test_empty_lca(self, name, node_1, node_2, expected):
-        self.assertEqual(expected, LCA.find_LCA(
+    def test_empty_lca_binary(self, name, node_1, node_2, expected):
+        self.assertEqual(expected, LCA.find_LCA_binary(
             self.empty_tree, node_1, node_2))
 
     @parameterized.expand([
@@ -126,9 +139,23 @@ class LcaTest(unittest.TestCase):
         ("same node", 7, 7, -1),
         ("root with other node", 1, 99, -1),
     ])
-    def test_only_root_lca(self, name, node_1, node_2, expected):
-        self.assertEqual(expected, LCA.find_LCA(
+    def test_only_root_lca_binary(self, name, node_1, node_2, expected):
+        self.assertEqual(expected, LCA.find_LCA_binary(
             self.only_root, node_1, node_2))
+
+    @parameterized.expand([
+        ("arbitrary - 1", 3, 4, 2),                        # D, E -> C
+        ("arbitrary - 2", 3, 2, 0),                        # D, C -> A
+        ("arbitrary - 3", 1, 4, 0),                        # B, E -> A
+        ("arbitrary - 3, change order", 4, 1, 0),          # E, B -> A
+        ("root with other node", 0, 4, 0),                 # A, E -> A
+        ("node with itself", 2, 2, 2),                     # C, C -> C
+    ])
+    def test_valid_lca_dag(self, name, node_1, node_2, expected):
+        self.assertEqual(expected, LCA.find_LCA_DAG(
+            self.dag_example, node_1, node_2))
+
+    
 
 
 if __name__ == "__main__":

@@ -9,11 +9,14 @@ class Node:
     left: typing.Any = None
     right: typing.Any = None
 
+@dataclass
+class DAG:
+    adjacency_matrix: typing.List[typing.List[bool]]
 
 class LCA:
     """Simple class that provides LCA functionality for binary trees."""
     @staticmethod
-    def find_path(root: typing.Type[Node],
+    def find_path_binary(root: typing.Type[Node],
                   id: int,
                   current_path: typing.List[Node]) -> bool:
         """Finds path from root to the node with specified id.
@@ -28,15 +31,15 @@ class LCA:
         if root.identifier == id:
             return True
 
-        if ((root.left and LCA.find_path(root.left, id, current_path))
-                or (root.right and LCA.find_path(root.right, id, current_path))):
+        if ((root.left and LCA.find_path_binary(root.left, id, current_path))
+                or (root.right and LCA.find_path_binary(root.right, id, current_path))):
             return True
 
         current_path.pop()
         return False
 
     @staticmethod
-    def find_LCA(root: typing.Type[Node],
+    def find_LCA_binary(root: typing.Type[Node],
                  id1: int,
                  id2: int) -> int:
         """Finds the least common ancestor for two nodes in a binary tree.
@@ -46,7 +49,7 @@ class LCA:
         path_1 = []
         path_2 = []
 
-        if (not LCA.find_path(root, id1, path_1)) or (not LCA.find_path(root, id2, path_2)):
+        if (not LCA.find_path_binary(root, id1, path_1)) or (not LCA.find_path_binary(root, id2, path_2)):
             return - 1
 
         i = 0
@@ -55,3 +58,7 @@ class LCA:
                 break
             i += 1
         return path_1[i-1]
+
+    @staticmethod
+    def find_LCA_DAG(graph: DAG, a: int, b: int) -> int:
+        return -1
